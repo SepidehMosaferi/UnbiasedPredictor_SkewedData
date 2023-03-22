@@ -1,0 +1,19 @@
+## INPUT 
+# yi: response variable (direct estimate)
+# Xi: single covariate (measured with error)  
+# psi: sampling variance 
+# Cis: MSE of Xi
+
+## Description of Predictors' Names:
+
+1. thetaiexps: True parameter
+
+2. predexpdirs: Direct estimator
+
+3. predexp0s: EBLUP ignoring measurement error
+
+4. predexp1s: EBLUP Mosaferi: predictor A (biased predictor)
+
+5. predexp2s: New predictor estimating non-constant error variance: predictor B (unbiased predictor)
+
+6. predexp3s: New predictor: assuming unknown parameters are known.
