@@ -187,7 +187,7 @@ repeat{
   CI_Boot_lows_99 <- rbind(CI_Boot_lows_99,CI_Boot_low_99)
   CI_Boot_ups_99 <- rbind(CI_Boot_ups_99,CI_Boot_up_99)
   
-  if(iter == 10){break}
+  if(iter == 2000){break}
   
 }
 
