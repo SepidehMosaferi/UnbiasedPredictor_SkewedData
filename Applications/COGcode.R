@@ -216,7 +216,7 @@ DATA_length <- DATA_length %>% mutate(CI_length=as.numeric(CI_length),
                                       log_CI_length=log(as.numeric(CI_length)))
 
 ggplot(DATA_length, aes(x=factor(method), y=log_CI_length,color=method))+
-  geom_boxplot()+
+  geom_boxplot()+guides(col = FALSE)+  
   labs(x="method",y="length",title="(b) Distribution of the Length of Prediction Intervals in Logarithmic Scale for n=8000")+theme_light()
 
 Summary <- DATA_length %>% group_by(method) %>% summarize(min=min(log_CI_length,na.rm=TRUE),Q1=quantile(log_CI_length,0.25,na.rm=TRUE),Q2=quantile(log_CI_length,0.5,na.rm=TRUE),

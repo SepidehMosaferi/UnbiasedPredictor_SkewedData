@@ -13,6 +13,7 @@ rm(list = ls(all = TRUE))
 source("pars_estimation.R")
 require("sae"); require("dplyr"); require("infer"); require("gridExtra"); require("tidyverse") 
 
+
 iter <- 0
 
 sig2bhatmes <- c()
@@ -22,7 +23,7 @@ betahats <- c()
 mseest <- c()
 newparests <- c()
 ebmeyls <- c()
-m <- 20  #number of small areas  
+m <- 50  #number of small areas  
 
 # names of predictors: 
 thetaiexps <- c()
@@ -31,6 +32,8 @@ predexp1s <- c()
 predexpdirs <- c()
 predexp2s <- c()
 predexp3s <- c()
+R1is <- c()
+mse_Js <- c()
 
 # values of parameters:
 mux <- 5
@@ -41,7 +44,7 @@ set.seed(1200) #for the sake of reproducibility
 psi <- rgamma(m,shape=4.5,scale=2)
 beta0 <- 0
 beta1 <- 3
-sdu <- sqrt(sample(c(0,2),size=m,prob=c(1-50/100,50/100),replace=TRUE)) #percentage of measurement error
+sdu <- sqrt(sample(c(0,2),size=m,prob=c(1-100/100,100/100),replace=TRUE)) #percentage of measurement error
 xi <- rnorm(m, mean = mux, sd = sdx)
 
 
@@ -70,7 +73,7 @@ repeat{
   
   ## Estimating unknown parameters based on iterative algorithm
   newpar.est <- FHME_estimation(yi, Xi, psi, Cis)$para
-
+  
   newparests <- rbind(newparests, newpar.est) #(beta0,beta1,sigma^2v)
   
   gammameyl <- (newpar.est[3] + newpar.est[2]^2*Cis)/(newpar.est[3] + newpar.est[2]^2*Cis+psi)
@@ -88,7 +91,9 @@ repeat{
   thetaiexps <- rbind( thetaiexps, exp(thetai))
   
   ####  EBLUP ignoring measurement error
-  predexp0s <- rbind(predexp0s, exp(as.vector(efh$eblup) + 0.5*psi*efh$fit$refvar/(efh$fit$refvar+psi)))
+  gammameyl0 <- (newpar.est[3])/(newpar.est[3]+psi)
+  thetahatmeyl0 <- gammameyl0*yi + (1-gammameyl0)*as.vector(cbind(1, xi)%*%newpar.est[c(1,2)])
+  predexp0s <- rbind(predexp0s, exp(thetahatmeyl0 + 0.5*psi*gammameyl0))
   
   ####  EBLUP Mosaferi et al. (predictor A: biased predictor)
   predexp1s <- rbind(predexp1s, exp(thetahatmeyl + 0.5*psi*gammameyl))
@@ -117,6 +122,39 @@ repeat{
   predexp3c <- exp( gammaeyl22*nuil2 + 0.5*(gammaeyl22*(beta1^2*Cis + psi) ))
   predexp3 <- predexp3a*predexp3b*predexp3c
   predexp3s <-rbind(predexp3s, predexp3) 
+  
+  ## MSE development
+  
+  ## First term of MSE
+  di <- 2*psi*newpar.est[2]^2*Cis/(newpar.est[2]^2*Cis+newpar.est[3]+psi)
+  M2i <- 1-2*exp(1.5*di-gammameyl*psi)+exp(di-gammameyl*psi)
+  
+  R1i <- (M2i^2)*exp(4*(yi-psi))*(1-exp(-4*newpar.est[3]-4*psi))
+  R1is <- rbind(R1is,R1i)
+  
+  ## Jackknife estimator of MSE 
+  
+  R1i_del <- matrix(0,nrow=m,ncol=m)   #each row belongs to one area
+  thetaB_del <- matrix(0,nrow=m,ncol=m) 
+  
+  Jack <- Jackknife(yi,Xi,psi,Cis,R1i_del,thetaB_del)
+  
+  # reassigning names
+  thetaB_del <- Jack[,1:m]  #each row belongs to one area
+  R1i_del <- Jack[,(m+1):(2*m)]
+  
+  R1i_Jack <- rep(0,m)
+  for(u in 1:m){
+    R1i_Jack[u] <- R1i[u]-((m-1)/m)*sum(R1i_del[u,]-R1i[u]) 
+  }
+  
+  R2i_Jack <- rep(0,m)
+  for(u in 1:m){
+    R2i_Jack[u] <- ((m-1)/m)*sum(thetaB_del[u,]-predexp2[u])^2
+  }
+  
+  mse_J <- R1i_Jack+R2i_Jack   #Final Jackknife estimator for MSE 
+  mse_Js <- rbind(mse_Js,mse_J)
   
   if(iter == 2000){break}
   
@@ -163,12 +201,20 @@ mean(apply((predexpdirs - thetaiexps)^2, 2, mean))
 mean(apply((predexp2s - thetaiexps)^2, 2, mean))
 
 ## Table 2 of Manuscript:
+logmean_mse_Js <- rep(0,m) #jackknife
+for(i in 1:m){
+  logmean_mse_Js[i] <- log(mean(mse_Js[,i][mse_Js[,i] >= 0]))
+}
+
 Result2 <- as.matrix(cbind(sdu,log(apply((predexpdirs-thetaiexps)^2,2,mean)),
                            log(apply((predexp0s - thetaiexps)^2, 2, mean)),
                            log(apply((predexp1s - thetaiexps)^2, 2, mean)),
-                           log(apply((predexp2s - thetaiexps)^2, 2, mean))))
-colnames(Result2) <- c("sdu","EMSE Direct","EMSE No-ME","EMSE Pred A","EMSE Pred B")
+                           log(apply((predexp2s - thetaiexps)^2, 2, mean)),
+                           log(apply(R1is,2,mean)),logmean_mse_Js))
+colnames(Result2) <- c("sdu","EMSE Direct","EMSE No-ME","EMSE Pred A","EMSE Pred B","R1is","Jakknife")
 apply(Result2[,-1],2,mean) #Average of results
+
+
 
 ##### EMSE averaged by value of sdu
 Result2 <- as.data.frame(Result2)
@@ -215,13 +261,15 @@ DATA_RRMSE <- DATA_RRMSE %>% mutate(RRMSE=as.numeric(RRMSE),samll_area=small_are
 DATA_RRMSE <- DATA_RRMSE %>% arrange(desc(RRMSE)) 
 DATA_RRMSE$small_area <- small_area
 
-Plot1 <- ggplot(DATA_RB, aes(x = small_area, y = RB, color = Predictor)) +
+Plot1 <- ggplot(DATA_RB, aes(x = small_area, y = RB, shape= Predictor, color = Predictor)) +
   geom_point(size=2.5)+scale_shape_manual(values = c(15, 16))+geom_line()+ 
+  scale_color_manual(values = c(15, 16))+
   labs(x = "small area index (descending order based on RB)", y = "RB", 
        title="(a) Comparison of Relative Bias",color = "Predictor")+theme_light()
 
-Plot2 <- ggplot(DATA_RRMSE, aes(x = small_area, y = RRMSE, color = Predictor)) +
+Plot2 <- ggplot(DATA_RRMSE, aes(x = small_area, y = RRMSE, shape=Predictor, color = Predictor)) +
   geom_point(size=2.5)+scale_shape_manual(values = c(15, 16))+geom_line()+ 
+  scale_color_manual(values = c(15, 16))+
   labs(x = "small area index (descending order based on RRMSE)", y = "RRMSE", 
        title="(b) Comparison of Relative Root MSE",color = "Predictor")+theme_light()
 

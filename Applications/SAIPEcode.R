@@ -153,6 +153,13 @@ Plot2 <- ggplot(DATA_aftrans, aes(x = logx, y = logy, color = variable,shape=var
 
 grid.arrange(Plot1, Plot2, ncol=2)
 
+cov <- c(rep("log(ACS5yrs)",m),rep("log(SNAP)",m))
+Covariate <- as_tibble(cbind(rep(1:m,2),c(Xi,X_SNAP),cov)) 
+Covariate2 <- Covariate %>% rename(area=V1,value=V2) %>% mutate(area=as.numeric(area),value=as.numeric(value))
+
+ggplot(Covariate2, aes(x=factor(cov), y=value,color=cov))+
+  geom_boxplot(col="black")+guides(col = FALSE)+theme_light()+labs(x = "covariates") 
+
 ## Plots of Prediction Intervals
 
 direct <- y2018
@@ -190,7 +197,7 @@ DATA_length <- DATA_length %>% mutate(CI_length=as.numeric(CI_length),
                                       log_CI_length=log(as.numeric(CI_length)))
 
 ggplot(DATA_length, aes(x=factor(method), y=log_CI_length,color=method))+
-  geom_boxplot()+
+  geom_boxplot()+guides(col = FALSE)+ 
   labs(x="method",y="length",title="Distribution of the Length of Prediction Intervals in Logarithmic Scale")+theme_light()
 
 

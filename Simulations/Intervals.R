@@ -24,7 +24,7 @@ betahats <- c()
 mseest <- c()
 newparests <- c()
 ebmeyls <- c()
-m <- 20  #number of small areas  
+m <- 50  #number of small areas  
 
 # names of estimators: 
 thetaiexps <- c()
@@ -103,7 +103,9 @@ repeat{
   thetaiexps <- rbind( thetaiexps, exp(thetai))
   
   ####  EBLUP ignoring measurement error
-  predexp0s <- rbind(predexp0s, exp(as.vector(efh$eblup) + 0.5*psi*efh$fit$refvar/(efh$fit$refvar+psi)))
+  gammameyl0 <- (newpar.est[3])/(newpar.est[3]+psi)
+  thetahatmeyl0 <- gammameyl0*yi + (1-gammameyl0)*as.vector(cbind(1, xi)%*%newpar.est[c(1,2)])
+  predexp0s <- rbind(predexp0s, exp(thetahatmeyl0 + 0.5*psi*gammameyl0))
   
   ####  EBLUP Mosaferi et al. (predictor A: biased predictor)
   predexp1s <- rbind(predexp1s, exp(thetahatmeyl + 0.5*psi*gammameyl))
@@ -214,24 +216,24 @@ CI_Jack_lows_99 <- predexp2s-2.58*sqrt(mse_Js)
 CI_Jack_ups_99 <- predexp2s+2.58*sqrt(mse_Js) 
 
 ## empirical CI length
-CI_direct_length_90 <- apply(CI_direct_ups_90-CI_direct_lows_90,2,mean); mean(log(CI_direct_length_90))
-CI_direct_length_95 <- apply(CI_direct_ups_95-CI_direct_lows_95,2,mean); mean(log(CI_direct_length_95))
-CI_direct_length_99 <- apply(CI_direct_ups_99-CI_direct_lows_99,2,mean); mean(log(CI_direct_length_99))
+logCI_direct_length_90 <- apply(CI_direct_ups_90-CI_direct_lows_90,2,log); mean(logCI_direct_length_90)
+logCI_direct_length_95 <- apply(CI_direct_ups_95-CI_direct_lows_95,2,log); mean(logCI_direct_length_95)
+logCI_direct_length_99 <- apply(CI_direct_ups_99-CI_direct_lows_99,2,log); mean(logCI_direct_length_99) 
 
-CI_R1i_length_90 <- apply(CI_R1i_ups_90-CI_R1i_lows_90,2,mean); mean(log(CI_R1i_length_90))
-CI_R1i_length_95 <- apply(CI_R1i_ups_95-CI_R1i_lows_95,2,mean); mean(log(CI_R1i_length_95))
-CI_R1i_length_99 <- apply(CI_R1i_ups_99-CI_R1i_lows_99,2,mean); mean(log(CI_R1i_length_99))
+logCI_R1i_length_90 <- apply(CI_R1i_ups_90-CI_R1i_lows_90,2,log); mean(logCI_R1i_length_90) 
+logCI_R1i_length_95 <- apply(CI_R1i_ups_95-CI_R1i_lows_95,2,log); mean(logCI_R1i_length_95)
+logCI_R1i_length_99 <- apply(CI_R1i_ups_99-CI_R1i_lows_99,2,log); mean(logCI_R1i_length_99)
 
-CI_Jack_length_90 <- apply(CI_Jack_ups_90-CI_Jack_lows_90,2,mean)
-CI_Jack_length_90_nona <- CI_Jack_length_90[!is.na(CI_Jack_length_90)]; mean(log(CI_Jack_length_90_nona))
-CI_Jack_length_95 <- apply(CI_Jack_ups_95-CI_Jack_lows_95,2,mean)
-CI_Jack_length_95_nona <- CI_Jack_length_95[!is.na(CI_Jack_length_95)]; mean(log(CI_Jack_length_95_nona))
-CI_Jack_length_99 <- apply(CI_Jack_ups_99-CI_Jack_lows_99,2,mean)
-CI_Jack_length_99_nona <- CI_Jack_length_99[!is.na(CI_Jack_length_99)]; mean(log(CI_Jack_length_99_nona))
+logCI_Jack_length_90 <- apply(CI_Jack_ups_90-CI_Jack_lows_90,2,log)
+logCI_Jack_length_90_nona <- logCI_Jack_length_90[!is.na(logCI_Jack_length_90)]; mean(logCI_Jack_length_90_nona) 
+logCI_Jack_length_95 <- apply(CI_Jack_ups_95-CI_Jack_lows_95,2,log)
+logCI_Jack_length_95_nona <- logCI_Jack_length_95[!is.na(logCI_Jack_length_95)]; mean(logCI_Jack_length_95_nona) 
+logCI_Jack_length_99 <- apply(CI_Jack_ups_99-CI_Jack_lows_99,2,log)
+logCI_Jack_length_99_nona <- logCI_Jack_length_99[!is.na(logCI_Jack_length_99)]; mean(logCI_Jack_length_99_nona) 
 
-CI_Boot_length_90 <- apply(CI_Boot_ups_90-CI_Boot_lows_90,2,mean); mean(log(CI_Boot_length_90))
-CI_Boot_length_95 <- apply(CI_Boot_ups_95-CI_Boot_lows_95,2,mean); mean(log(CI_Boot_length_95))
-CI_Boot_length_99 <- apply(CI_Boot_ups_99-CI_Boot_lows_99,2,mean); mean(log(CI_Boot_length_99))
+logCI_Boot_length_90 <- apply(CI_Boot_ups_90-CI_Boot_lows_90,2,log); mean(logCI_Boot_length_90)
+logCI_Boot_length_95 <- apply(CI_Boot_ups_95-CI_Boot_lows_95,2,log); mean(logCI_Boot_length_95)
+logCI_Boot_length_99 <- apply(CI_Boot_ups_99-CI_Boot_lows_99,2,log); mean(logCI_Boot_length_99)
 
 ## empirical coverage
 
