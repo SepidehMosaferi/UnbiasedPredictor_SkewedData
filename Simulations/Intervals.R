@@ -2,7 +2,7 @@
 # Title: R code for "An unbiased predictor for skewed response variable with  
 # measurement error in covariate"
 # Note: This code illustrates the coverage probabilities and expected lengths of 
-# prediction intervals in Table 5.
+# prediction intervals in Table 4.
 # Author: Sepideh Mosaferi
 # Date: March 2023
 # ------------------------------------------------------------------------------------

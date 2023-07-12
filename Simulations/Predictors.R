@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------------
 # Title: R code for "An unbiased predictor for skewed response variable with  
 # measurement error in covariate"
-# Note: This code illustrates the performance of predictors in Tables 1--4
+# Note: This code illustrates the performance of predictors in Tables 1--3
 # and Figure 1.
 # Author: Sepideh Mosaferi
 # Date: March 2023
