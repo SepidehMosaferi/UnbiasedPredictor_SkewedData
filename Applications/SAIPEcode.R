@@ -153,12 +153,12 @@ Plot2 <- ggplot(DATA_aftrans, aes(x = logx, y = logy, color = variable,shape=var
 
 grid.arrange(Plot1, Plot2, ncol=2)
 
-cov <- c(rep("log(ACS5yrs)",m),rep("log(SNAP)",m))
-Covariate <- as_tibble(cbind(rep(1:m,2),c(Xi,X_SNAP),cov)) 
+method <- c(rep("direct",m),rep("FHeblup",m))
+Covariate <- as_tibble(cbind(rep(1:m,2),c(direct,Theta_SNAP),method)) 
 Covariate2 <- Covariate %>% rename(area=V1,value=V2) %>% mutate(area=as.numeric(area),value=as.numeric(value))
 
-ggplot(Covariate2, aes(x=factor(cov), y=value,color=cov))+
-  geom_boxplot(col="black")+guides(col = FALSE)+theme_light()+labs(x = "covariates") 
+ggplot(Covariate2, aes(x=factor(method), y=value,color=method))+
+  geom_boxplot(col="black")+guides(col = FALSE)+theme_light()+labs(x = "predictors")
 
 ## Plots of Prediction Intervals
 
